@@ -284,14 +284,14 @@ export default function App() {
   return (
     <div className="arena">
       {arena.me ? (
-        <ArenaScene conn={conn} me={arena.me} bags={arena.bags} onTarget={setTargetId} />
+        <ArenaScene conn={conn} me={arena.me} bags={arena.bags} onTarget={setTargetId} lowPower={touch} />
       ) : (
-        <div className="loading">{arena.status === 'offline' ? '서버에 다시 연결하는 중…' : '분풀이 마당에 들어가는 중…'}</div>
+        <div className="loading">{arena.status === 'offline' ? '결계가 끊겼어요. 다시 잇는 중…' : '원한의 광장으로 내려가는 중…'}</div>
       )}
 
       <header className="hud-top">
         <div>
-          <strong>분풀이</strong>
+          <strong className="title">분풀이</strong>
           {arena.channel && (
             <span className="hud-meta">
               {' '}채널 {arena.channel} · {arena.playerCount}명
@@ -301,7 +301,7 @@ export default function App() {
           {arena.status !== 'online' && arena.me && <span className="hud-warn"> 연결 끊김, 다시 연결 중</span>}
         </div>
         <nav>
-          <button className={panel === 'pick' ? 'on' : ''} onClick={() => toggle('pick')}>샌드백 세우기</button>
+          <button className={panel === 'pick' ? 'on' : ''} onClick={() => toggle('pick')}>원수 세우기</button>
           <button className={panel === 'ranking' ? 'on' : ''} onClick={() => toggle('ranking')}>순위</button>
           <button className={panel === 'vents' ? 'on' : ''} onClick={() => toggle('vents')}>외침</button>
         </nav>
@@ -312,15 +312,15 @@ export default function App() {
           <button className="link close" onClick={() => setPanel(null)}>닫기</button>
           {panel === 'pick' && (
             <section className="card">
-              <h2>나를 안 뽑은 회사 세우기</h2>
-              <p className="muted">고른 회사 샌드백이 이 채널 마당에 세워져요. 채널마다 최근 3개까지.</p>
+              <h2>나를 버린 회사를 교수대에</h2>
+              <p className="muted">고른 회사가 이 채널 광장의 교수대에 매달려요. 채널마다 최근 3개까지.</p>
               <CompanyPicker
                 value={company}
                 onChange={(c) => {
                   setCompany(c)
                   if (c) {
                     conn.pick(c.id)
-                    toast.show(`${c.name} 샌드백을 세웠어요`)
+                    toast.show(`${c.name}을(를) 교수대에 매달았어요`)
                   }
                 }}
               />
@@ -333,9 +333,9 @@ export default function App() {
 
       <div className="target">
         {target ? (
-          <>조준 <b>{target.name}</b></>
+          <>표적 <b>{target.name}</b></>
         ) : (
-          '샌드백을 기다리는 중'
+          '표적을 찾는 중'
         )}
         {!touch && <span className="hint">WASD 이동 · J 주먹(가까이) · K/Space 총 · L 미사일</span>}
       </div>

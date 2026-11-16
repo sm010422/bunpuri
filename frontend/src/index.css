@@ -1,26 +1,15 @@
+/* 다크 판타지 한 가지 테마만 쓴다: 검은 돌, 핏빛 룬, 바랜 양피지 글씨 */
 :root {
-  --bg: #f6f3ef;
-  --card: #ffffff;
-  --text: #1f1b18;
-  --muted: #6f665f;
-  --line: #e6dfd8;
-  --accent: #d2452f;
-  --accent-soft: #fbe4df;
-  color-scheme: light;
+  --bg: #0a0610;
+  --card: rgba(18, 12, 22, 0.88);
+  --text: #e4dccf;
+  --muted: #8f8496;
+  --line: rgba(255, 60, 80, 0.18);
+  --accent: #e0263a;
+  --accent-soft: rgba(224, 38, 58, 0.16);
+  --gold: #c9a45c;
+  color-scheme: dark;
   font-family: 'Pretendard', system-ui, -apple-system, 'Apple SD Gothic Neo', sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #171412;
-    --card: #221e1b;
-    --text: #f1ebe5;
-    --muted: #a39890;
-    --line: #36302b;
-    --accent: #ff6b52;
-    --accent-soft: #3a2420;
-    color-scheme: dark;
-  }
 }
 
 * { box-sizing: border-box; }
@@ -35,49 +24,60 @@ body {
 html, body, #root { height: 100%; overflow: hidden; }
 
 h1 { margin: 0; font-size: 2rem; }
-h2 { margin: 0 0 12px; font-size: 1.1rem; }
+h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  font-family: 'Nanum Myeongjo', serif;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
 p { margin: 0; }
 .muted { color: var(--muted); font-size: 0.9rem; }
 
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 6px;
   padding: 20px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(120, 0, 20, 0.15);
+  backdrop-filter: blur(6px);
 }
 
 input, textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
   color: var(--text);
   font: inherit;
   resize: vertical;
 }
+input:focus, textarea:focus { outline: 1px solid var(--accent); }
 
 button { font: inherit; cursor: pointer; }
 .primary {
-  background: var(--accent);
-  color: #fff;
-  border: 0;
-  border-radius: 10px;
+  background: linear-gradient(#8f1020, #5a0812);
+  color: #f3e6d6;
+  border: 1px solid #c42a3a;
+  border-radius: 4px;
   padding: 10px 18px;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(224, 38, 58, 0.35);
 }
-.primary:disabled { opacity: 0.4; cursor: default; }
+.primary:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
 .link { background: none; border: 0; color: var(--accent); padding: 4px 0; }
 .small { font-size: 0.8rem; color: var(--muted); }
 
-.picker { position: relative; }
+.picker { position: relative; margin-top: 12px; }
 .results {
   list-style: none;
   margin: 4px 0 0;
   padding: 4px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
 }
 .results button {
   width: 100%;
@@ -86,96 +86,119 @@ button { font: inherit; cursor: pointer; }
   border: 0;
   padding: 8px;
   color: var(--text);
-  border-radius: 6px;
+  border-radius: 3px;
 }
 .results button:hover { background: var(--accent-soft); }
 .picked { display: flex; justify-content: space-between; align-items: center; }
 
-.ranking { margin: 0; padding-left: 20px; }
-.ranking li { display: flex; justify-content: space-between; padding: 4px 0; }
-.ranking li::marker { color: var(--muted); }
-.count { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ranking { margin: 0; padding-left: 22px; }
+.ranking li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+.ranking li::marker { color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.count { font-variant-numeric: tabular-nums; font-weight: 700; color: #ff5a68; }
 
 .composer-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
 .feed { list-style: none; margin: 16px 0 0; padding: 0; }
 .feed li { border-top: 1px solid var(--line); padding: 12px 0; overflow-wrap: anywhere; }
-.tag { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
-.comfort { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
-
-footer { text-align: center; }
+.tag { font-size: 0.8rem; color: var(--accent); font-weight: 700; }
+.comfort { color: var(--gold); opacity: 0.8; font-size: 0.9rem; margin-top: 4px; font-style: italic; }
 
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  top: 64px;
   transform: translateX(-50%);
-  background: var(--text);
-  color: var(--bg);
-  padding: 10px 16px;
-  border-radius: 999px;
+  background: rgba(20, 6, 10, 0.92);
+  color: #f0d9c4;
+  border: 1px solid #7a1420;
+  padding: 10px 18px;
+  border-radius: 4px;
   font-size: 0.9rem;
   max-width: calc(100% - 32px);
+  box-shadow: 0 0 20px rgba(224, 38, 58, 0.3);
 }
 
-/* ---- 3D 마당 ---- */
-.arena { position: fixed; inset: 0; background: #9fc6e6; touch-action: none; user-select: none; -webkit-user-select: none; }
+/* ---- 원한의 광장 (3D) ---- */
+.arena { position: fixed; inset: 0; background: var(--bg); touch-action: none; user-select: none; -webkit-user-select: none; }
 .arena canvas { display: block; }
-.loading { position: absolute; inset: 0; display: grid; place-items: center; color: #1f1b18; font-weight: 600; }
+.loading {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: var(--muted); font-family: 'Nanum Myeongjo', serif; font-size: 1.1rem; letter-spacing: 0.08em;
+  animation: breathe 2.4s ease-in-out infinite;
+}
+@keyframes breathe { 50% { opacity: 0.4; } }
 
 .hud-top {
   position: absolute; top: 0; left: 0; right: 0;
   display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
-  padding: 12px 16px; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  padding: 14px 18px; color: var(--muted);
+  background: linear-gradient(rgba(5, 2, 8, 0.85), transparent);
   pointer-events: none;
 }
-.hud-top strong { font-size: 1.2rem; }
-.hud-meta { font-size: 0.85rem; }
-.hud-warn { color: #ffd166; font-size: 0.85rem; }
+.hud-top .title {
+  font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 1.45rem;
+  color: #ff3b4b; letter-spacing: 0.06em;
+  text-shadow: 0 0 12px rgba(255, 30, 50, 0.7), 0 0 2px #000;
+}
+.hud-meta { font-size: 0.82rem; }
+.hud-meta b { color: var(--text); font-weight: 600; }
+.hud-warn { color: #ff8a4a; font-size: 0.82rem; }
 .hud-top nav { display: flex; gap: 6px; pointer-events: auto; }
 .hud-top nav button {
-  border: 0; border-radius: 999px; padding: 6px 12px; font-size: 0.85rem;
-  background: rgba(0, 0, 0, 0.45); color: #fff;
+  border: 1px solid rgba(255, 60, 80, 0.25); border-radius: 3px; padding: 6px 12px; font-size: 0.82rem;
+  background: rgba(10, 4, 12, 0.75); color: var(--text);
 }
-.hud-top nav button.on { background: var(--accent); }
+.hud-top nav button:hover { border-color: rgba(255, 60, 80, 0.6); }
+.hud-top nav button.on { background: #6e0c18; border-color: #e0263a; color: #fff; }
 
 .drawer {
-  position: absolute; top: 56px; right: 16px; width: min(380px, calc(100% - 32px));
-  max-height: calc(100% - 200px); overflow-y: auto;
+  position: absolute; top: 62px; right: 16px; width: min(380px, calc(100% - 32px));
+  max-height: calc(100% - 220px); overflow-y: auto;
   display: flex; flex-direction: column; gap: 8px;
 }
-.drawer .close { align-self: flex-end; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.drawer .close { align-self: flex-end; color: var(--muted); }
 
 .target {
-  position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); font-size: 0.95rem; white-space: nowrap;
-  pointer-events: none;
+  color: var(--muted); font-size: 0.9rem; white-space: nowrap; pointer-events: none;
+  text-shadow: 0 1px 4px #000;
 }
-.target .hint { font-size: 0.75rem; opacity: 0.85; }
+.target b { color: #ff4a58; font-family: 'Nanum Myeongjo', serif; font-size: 1.15rem; text-shadow: 0 0 10px rgba(255, 30, 50, 0.6); }
+.target .hint { font-size: 0.72rem; opacity: 0.7; }
 
-.weapons { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 10px; align-items: flex-end; }
+.weapons { position: absolute; right: 18px; bottom: 18px; display: flex; gap: 12px; align-items: flex-end; }
 .weapon {
-  width: 68px; height: 68px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.85);
-  color: #fff; font-weight: 700; font-size: 0.9rem;
+  width: 66px; height: 66px; border-radius: 50%;
+  color: #f0e2d0; font-weight: 700; font-size: 0.88rem;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); touch-action: none;
+  background: radial-gradient(circle at 50% 35%, #2a1218, #0b0508 70%);
+  border: 1px solid var(--glow);
+  box-shadow: 0 0 16px var(--glow-soft), inset 0 0 14px var(--glow-soft);
+  touch-action: none;
 }
-.weapon small { font-size: 0.65rem; opacity: 0.8; font-weight: 500; }
-.weapon:active { transform: scale(0.94); }
-.weapon.punch { background: #c1666b; }
-.weapon.gun { background: #29335c; width: 78px; height: 78px; }
-.weapon.missile { background: #e4572e; }
+.weapon small { font-size: 0.62rem; opacity: 0.6; font-weight: 500; }
+.weapon:active { transform: scale(0.93); box-shadow: 0 0 26px var(--glow), inset 0 0 18px var(--glow); }
+.weapon.punch { --glow: #c9a45c; --glow-soft: rgba(201, 164, 92, 0.3); }
+.weapon.gun { --glow: #ff3b5c; --glow-soft: rgba(255, 59, 92, 0.35); width: 78px; height: 78px; }
+.weapon.missile { --glow: #ff6a1a; --glow-soft: rgba(255, 106, 26, 0.35); }
 
 .joystick {
   position: absolute; left: 24px; bottom: 24px; width: 120px; height: 120px; border-radius: 50%;
-  background: rgba(0, 0, 0, 0.25); border: 2px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle, rgba(60, 10, 20, 0.35), rgba(0, 0, 0, 0.5));
+  border: 1px solid rgba(255, 60, 80, 0.35);
   display: grid; place-items: center; touch-action: none;
 }
-.joystick span { width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); }
+.joystick span {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #5a1a24, #1a0508);
+  border: 1px solid rgba(255, 60, 80, 0.6);
+  box-shadow: 0 0 12px rgba(255, 40, 60, 0.4);
+}
 
 @media (max-width: 600px) {
   .target { bottom: 150px; }
   .target .hint { display: none; }
   .weapon { width: 60px; height: 60px; }
   .weapon.gun { width: 70px; height: 70px; }
+  .hud-top { padding: 10px 12px; }
 }
