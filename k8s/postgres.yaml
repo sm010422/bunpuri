@@ -1,0 +1,76 @@
+# 홈서버 3노드 중 예약 여유가 있는 곳은 worker2뿐이라 bunpuri 전체를 worker2에 고정한다.
+# (2026-11-16 실측: master 실사용 69%, worker1 limits 합계 90%, worker2 requests 1%)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: bunpuri-postgres
+spec:
+  clusterIP: None
+  selector:
+    app: bunpuri-postgres
+  ports:
+    - name: postgres
+      port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bunpuri-postgres
+  template:
+    metadata:
+      labels:
+        app: bunpuri-postgres
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-worker2
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          # HikariCP 풀 크기 × 앱 인스턴스 수가 max_connections를 넘지 않아야 한다.
+          args: ["-c", "max_connections=50", "-c", "shared_buffers=64MB",
+                 "-c", "shared_preload_libraries=pg_stat_statements"]
+          env:
+            - name: POSTGRES_DB
+              value: bunpuri
+            - name: POSTGRES_USER
+              value: bunpuri
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bunpuri-db
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - name: postgres
+              containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "bunpuri", "-d", "bunpuri"]
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 2Gi

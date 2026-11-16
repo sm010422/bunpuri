@@ -1,0 +1,16 @@
+# Synced by ArgoCD (Application "bunpuri" in sm010422/k3s-msa-infrastructure).
+# CI rewrites images[0].newTag after every successful build on main.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bunpuri
+
+resources:
+  - postgres.yaml
+  - redis.yaml
+  - app.yaml
+# Not listed on purpose: the Secret bunpuri-db is created with kubectl (never committed):
+#   kubectl create secret generic bunpuri-db -n bunpuri --from-literal=POSTGRES_PASSWORD=...
+
+images:
+  - name: sm010422/bunpuri
+    newTag: "bootstrap-4a1bcd6"

@@ -5,3 +5,5 @@
 - 측정 수치는 실행한 환경(로컬/홈서버, VU, 시간)과 함께 적는다. 측정하지 않은 수치를 문서에 쓰지 않는다.
 - 스키마 변경은 Flyway 새 버전 파일로만 (V1 수정 금지).
 - 테스트: `./gradlew test` (Docker 없으면 통합 테스트는 자동 건너뜀).
+  colima 사용 시 Testcontainers가 소켓을 못 찾아 건너뛰므로 먼저:
+  `export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`
