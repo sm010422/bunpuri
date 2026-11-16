@@ -1,0 +1,9 @@
+.gradle/
+build/
+.idea/
+*.iml
+.env
+k6/results/
+
+# 작업 문서는 로컬에만 둔다
+docs/

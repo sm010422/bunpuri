@@ -1,0 +1,50 @@
+# 로컬·홈서버 공통. 앱까지 띄우려면: docker compose --profile app up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bunpuri
+      POSTGRES_USER: bunpuri
+      POSTGRES_PASSWORD: bunpuri
+    # 로드맵 2-HikariCP: 풀 크기 × 인스턴스 수가 이 값을 넘지 않아야 한다.
+    command: ["postgres", "-c", "max_connections=50", "-c", "shared_preload_libraries=pg_stat_statements"]
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    mem_limit: 512m
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    ports: ["6379:6379"]
+    mem_limit: 192m
+
+  app:
+    profiles: [app]
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/bunpuri
+      REDIS_HOST: redis
+      # 로드맵 4-JVM: 컨테이너 메모리 대비 힙 비율. 기본값(25%)과 비교 측정한다.
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60 -Xlog:gc*:file=/logs/gc.log:time,uptime:filecount=3,filesize=10m
+    ports: ["8080:8080"]
+    volumes: [./build/logs:/logs]
+    mem_limit: 768m
+    depends_on: [postgres, redis]
+
+  prometheus:
+    profiles: [monitoring]
+    image: prom/prometheus:v2.55.1
+    volumes: [./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro]
+    ports: ["9090:9090"]
+
+  grafana:
+    profiles: [monitoring]
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes: [./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro]
+    ports: ["3000:3000"]
+
+volumes:
+  pgdata:

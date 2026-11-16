@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: bunpuri
+    metrics_path: /actuator/prometheus
+    static_configs:
+      # 앱을 호스트에서 bootRun으로 띄우면 host.docker.internal, compose app 프로필이면 app:8080
+      - targets: ["host.docker.internal:8080", "app:8080"]

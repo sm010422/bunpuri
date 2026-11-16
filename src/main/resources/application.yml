@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: bunpuri
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bunpuri}
+    username: ${DB_USER:bunpuri}
+    password: ${DB_PASSWORD:bunpuri}
+    # 로드맵 2-HikariCP: 기본값을 명시해 두고, k6 측정 결과로 조정한다.
+    # 조건: maximum-pool-size × 인스턴스 수 ≤ PostgreSQL max_connections - 여유분
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 10
+      connection-timeout: 3000
+      max-lifetime: 1800000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.batch_size: 50
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 500ms
+  # 로드맵 2·4-스레드: 플랫폼 스레드(Tomcat 200)와 가상 스레드를 이 값으로 바꿔 비교한다.
+  threads:
+    virtual:
+      enabled: ${VIRTUAL_THREADS:false}
+
+server:
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    accept-count: 100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: bunpuri
+
+bunpuri:
+  rage:
+    flush-interval-ms: 5000
+  vent:
+    hide-report-threshold: 3
+  comfort:
+    # sync: 외침 저장 요청 안에서 위로 문구를 기다림 / async: 저장 후 백그라운드로 채움
+    mode: ${COMFORT_MODE:async}
+    timeout-ms: 2000
+    stub-latency-ms: 800
