@@ -14,4 +14,4 @@ resources:
 
 images:
   - name: sm010422/bunpuri
-    newTag: "4c5cf9e5b3e9bdc8adbc9eeb4b8603c9770705fd"
+    newTag: "eda12c02c2f6d6be158049f3cb71224a54c766ae"
