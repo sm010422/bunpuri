@@ -6,7 +6,6 @@
   --line: #e6dfd8;
   --accent: #d2452f;
   --accent-soft: #fbe4df;
-  --bag: #8a5a3b;
   color-scheme: light;
   font-family: 'Pretendard', system-ui, -apple-system, 'Apple SD Gothic Neo', sans-serif;
 }
@@ -20,7 +19,6 @@
     --line: #36302b;
     --accent: #ff6b52;
     --accent-soft: #3a2420;
-    --bag: #b07a55;
     color-scheme: dark;
   }
 }
@@ -34,14 +32,7 @@ body {
   line-height: 1.5;
 }
 
-main {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 24px 16px 64px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+html, body, #root { height: 100%; overflow: hidden; }
 
 h1 { margin: 0; font-size: 2rem; }
 h2 { margin: 0 0 12px; font-size: 1.1rem; }
@@ -100,34 +91,6 @@ button { font: inherit; cursor: pointer; }
 .results button:hover { background: var(--accent-soft); }
 .picked { display: flex; justify-content: space-between; align-items: center; }
 
-.sandbag-card { text-align: center; }
-.sandbag {
-  background: none;
-  border: 0;
-  padding: 8px;
-  touch-action: manipulation;
-  animation: hit 0.25s ease-out;
-}
-.bag {
-  display: block;
-  width: 120px;
-  height: 180px;
-  margin: 0 auto;
-  border-radius: 50px 50px 40px 40px;
-  background: var(--bag);
-  box-shadow: inset -12px -12px 0 rgba(0, 0, 0, 0.15);
-}
-@keyframes hit {
-  0% { transform: rotate(0deg); }
-  30% { transform: rotate(-12deg) translateX(-6px); }
-  60% { transform: rotate(6deg); }
-  100% { transform: rotate(0deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sandbag { animation: none; }
-}
-.combo { font-weight: 700; font-size: 1.2rem; margin-top: 8px; }
-
 .ranking { margin: 0; padding-left: 20px; }
 .ranking li { display: flex; justify-content: space-between; padding: 4px 0; }
 .ranking li::marker { color: var(--muted); }
@@ -152,4 +115,67 @@ footer { text-align: center; }
   border-radius: 999px;
   font-size: 0.9rem;
   max-width: calc(100% - 32px);
+}
+
+/* ---- 3D 마당 ---- */
+.arena { position: fixed; inset: 0; background: #9fc6e6; touch-action: none; user-select: none; -webkit-user-select: none; }
+.arena canvas { display: block; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: #1f1b18; font-weight: 600; }
+
+.hud-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 16px; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+.hud-top strong { font-size: 1.2rem; }
+.hud-meta { font-size: 0.85rem; }
+.hud-warn { color: #ffd166; font-size: 0.85rem; }
+.hud-top nav { display: flex; gap: 6px; pointer-events: auto; }
+.hud-top nav button {
+  border: 0; border-radius: 999px; padding: 6px 12px; font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.45); color: #fff;
+}
+.hud-top nav button.on { background: var(--accent); }
+
+.drawer {
+  position: absolute; top: 56px; right: 16px; width: min(380px, calc(100% - 32px));
+  max-height: calc(100% - 200px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.drawer .close { align-self: flex-end; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+
+.target {
+  position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); font-size: 0.95rem; white-space: nowrap;
+  pointer-events: none;
+}
+.target .hint { font-size: 0.75rem; opacity: 0.85; }
+
+.weapons { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 10px; align-items: flex-end; }
+.weapon {
+  width: 68px; height: 68px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.85);
+  color: #fff; font-weight: 700; font-size: 0.9rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); touch-action: none;
+}
+.weapon small { font-size: 0.65rem; opacity: 0.8; font-weight: 500; }
+.weapon:active { transform: scale(0.94); }
+.weapon.punch { background: #c1666b; }
+.weapon.gun { background: #29335c; width: 78px; height: 78px; }
+.weapon.missile { background: #e4572e; }
+
+.joystick {
+  position: absolute; left: 24px; bottom: 24px; width: 120px; height: 120px; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25); border: 2px solid rgba(255, 255, 255, 0.6);
+  display: grid; place-items: center; touch-action: none;
+}
+.joystick span { width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); }
+
+@media (max-width: 600px) {
+  .target { bottom: 150px; }
+  .target .hint { display: none; }
+  .weapon { width: 60px; height: 60px; }
+  .weapon.gun { width: 70px; height: 70px; }
 }

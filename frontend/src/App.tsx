@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { api, RateLimitedError, type Company, type Ranking, type Vent } from './api'
+import { bindKeyboard, input, pressWeapon } from './arena/input'
+import { ArenaConnection, COOLDOWN, type Weapon } from './arena/net'
+import { ArenaScene } from './arena/Scene'
 
 function useToast() {
   const [message, setMessage] = useState<string | null>(null)
@@ -55,33 +58,6 @@ function CompanyPicker({ value, onChange }: { value: Company | null; onChange: (
         </ul>
       )}
     </div>
-  )
-}
-
-function Sandbag({ company, onHit }: { company: Company | null; onHit: (msg: string) => void }) {
-  const [combo, setCombo] = useState(0)
-  const [todayTotal, setTodayTotal] = useState<number | null>(null)
-  const [shake, setShake] = useState(0)
-
-  const hit = async () => {
-    setShake((s) => s + 1)
-    setCombo((c) => c + 1)
-    try {
-      const res = await api.hit(company?.id ?? null)
-      setTodayTotal(res.todayTotal)
-    } catch (e) {
-      onHit(errorText(e))
-    }
-  }
-
-  return (
-    <section className="card sandbag-card">
-      <button key={shake} className="sandbag" onClick={hit} aria-label="샌드백 치기">
-        <span className="bag" />
-      </button>
-      <p className="combo">{combo > 0 ? `${combo}대 쳤어요` : '눌러서 한 대 치기'}</p>
-      {todayTotal !== null && <p className="muted">오늘 모두가 친 횟수 {todayTotal.toLocaleString()}대</p>}
-    </section>
   )
 }
 
@@ -195,24 +171,178 @@ function VentBoard({ company, notify }: { company: Company | null; notify: (msg:
   )
 }
 
-export default function App() {
-  const [company, setCompany] = useState<Company | null>(null)
-  const toast = useToast()
+type Panel = 'pick' | 'ranking' | 'vents' | null
+
+const WEAPONS: { weapon: Weapon; label: string; key: string }[] = [
+  { weapon: 'punch', label: '주먹', key: 'J' },
+  { weapon: 'gun', label: '총', key: 'K' },
+  { weapon: 'missile', label: '미사일', key: 'L' },
+]
+
+function WeaponPad() {
+  const [missileReadyAt, setMissileReadyAt] = useState(0)
+  const [now, setNow] = useState(() => performance.now())
+
+  useEffect(() => {
+    if (missileReadyAt <= now) return
+    const t = window.setTimeout(() => setNow(performance.now()), 100)
+    return () => window.clearTimeout(t)
+  }, [missileReadyAt, now])
+
+  const press = (weapon: Weapon) => {
+    pressWeapon(weapon)
+    if (weapon === 'missile' && performance.now() >= missileReadyAt) {
+      setMissileReadyAt(performance.now() + COOLDOWN.missile)
+      setNow(performance.now())
+    }
+  }
+  const release = (weapon: Weapon) => input.firing.delete(weapon)
+  const missileLeft = Math.max(0, missileReadyAt - now)
 
   return (
-    <main>
-      <header>
-        <h1>분풀이</h1>
-        <p className="muted">서류 광탈, 연락 두절, 압박 면접. 여기다 풀고 가요.</p>
+    <div className="weapons">
+      {WEAPONS.map(({ weapon, label, key }) => (
+        <button
+          key={weapon}
+          className={`weapon ${weapon}`}
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId)
+            press(weapon)
+          }}
+          onPointerUp={() => release(weapon)}
+          onPointerCancel={() => release(weapon)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {weapon === 'missile' && missileLeft > 0 ? `${Math.ceil(missileLeft / 1000)}초` : label}
+          <small>{key}</small>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Joystick() {
+  const base = useRef<HTMLDivElement>(null)
+  const [knob, setKnob] = useState({ x: 0, y: 0 })
+
+  const move = (e: React.PointerEvent) => {
+    const rect = base.current!.getBoundingClientRect()
+    const radius = rect.width / 2
+    let x = (e.clientX - rect.left - radius) / radius
+    let y = (e.clientY - rect.top - radius) / radius
+    const length = Math.hypot(x, y)
+    if (length > 1) {
+      x /= length
+      y /= length
+    }
+    input.joystick = { x, y }
+    setKnob({ x: x * radius * 0.6, y: y * radius * 0.6 })
+  }
+  const end = () => {
+    input.joystick = { x: 0, y: 0 }
+    setKnob({ x: 0, y: 0 })
+  }
+
+  return (
+    <div
+      ref={base}
+      className="joystick"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        move(e)
+      }}
+      onPointerMove={(e) => e.buttons && move(e)}
+      onPointerUp={end}
+      onPointerCancel={end}
+    >
+      <span style={{ transform: `translate(${knob.x}px, ${knob.y}px)` }} />
+    </div>
+  )
+}
+
+export default function App() {
+  const conn = useMemo(() => new ArenaConnection(), [])
+  const arena = useSyncExternalStore(conn.subscribe, conn.getSnapshot)
+  const [panel, setPanel] = useState<Panel>(null)
+  const [company, setCompany] = useState<Company | null>(null)
+  const [targetId, setTargetId] = useState<number | null>(null)
+  const toast = useToast()
+  const touch = useMemo(() => window.matchMedia('(pointer: coarse)').matches, [])
+
+  useEffect(() => {
+    conn.connect()
+    const unbind = bindKeyboard()
+    return () => {
+      unbind()
+      conn.close()
+    }
+  }, [conn])
+
+  const target = arena.bags.find((b) => b.id === targetId)
+  const toggle = (next: Panel) => setPanel((current) => (current === next ? null : next))
+
+  return (
+    <div className="arena">
+      {arena.me ? (
+        <ArenaScene conn={conn} me={arena.me} bags={arena.bags} onTarget={setTargetId} />
+      ) : (
+        <div className="loading">{arena.status === 'offline' ? '서버에 다시 연결하는 중…' : '분풀이 마당에 들어가는 중…'}</div>
+      )}
+
+      <header className="hud-top">
+        <div>
+          <strong>분풀이</strong>
+          {arena.channel && (
+            <span className="hud-meta">
+              {' '}채널 {arena.channel} · {arena.playerCount}명
+              {arena.me && <> · 나는 <b>{arena.me.name}</b></>}
+            </span>
+          )}
+          {arena.status !== 'online' && arena.me && <span className="hud-warn"> 연결 끊김, 다시 연결 중</span>}
+        </div>
+        <nav>
+          <button className={panel === 'pick' ? 'on' : ''} onClick={() => toggle('pick')}>샌드백 세우기</button>
+          <button className={panel === 'ranking' ? 'on' : ''} onClick={() => toggle('ranking')}>순위</button>
+          <button className={panel === 'vents' ? 'on' : ''} onClick={() => toggle('vents')}>외침</button>
+        </nav>
       </header>
-      <CompanyPicker value={company} onChange={setCompany} />
-      <Sandbag company={company} onHit={toast.show} />
-      <RankingBoard />
-      <VentBoard company={company} notify={toast.show} />
-      <footer className="muted">
-        익명으로 운영돼요. 회사 이름은 목록에서만 고를 수 있고, 연락처는 자동으로 가려져요.
-      </footer>
+
+      {panel && (
+        <aside className="drawer">
+          <button className="link close" onClick={() => setPanel(null)}>닫기</button>
+          {panel === 'pick' && (
+            <section className="card">
+              <h2>나를 안 뽑은 회사 세우기</h2>
+              <p className="muted">고른 회사 샌드백이 이 채널 마당에 세워져요. 채널마다 최근 3개까지.</p>
+              <CompanyPicker
+                value={company}
+                onChange={(c) => {
+                  setCompany(c)
+                  if (c) {
+                    conn.pick(c.id)
+                    toast.show(`${c.name} 샌드백을 세웠어요`)
+                  }
+                }}
+              />
+            </section>
+          )}
+          {panel === 'ranking' && <RankingBoard />}
+          {panel === 'vents' && <VentBoard company={company} notify={toast.show} />}
+        </aside>
+      )}
+
+      <div className="target">
+        {target ? (
+          <>조준 <b>{target.name}</b></>
+        ) : (
+          '샌드백을 기다리는 중'
+        )}
+        {!touch && <span className="hint">WASD 이동 · J 주먹(가까이) · K/Space 총 · L 미사일</span>}
+      </div>
+
+      {touch && <Joystick />}
+      <WeaponPad />
       {toast.message && <div className="toast" role="status">{toast.message}</div>}
-    </main>
+    </div>
   )
 }

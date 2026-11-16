@@ -5,7 +5,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
@@ -37,10 +40,15 @@ public class RageService {
         if (cid != CompanyService.NO_COMPANY && !companyService.exists(cid)) {
             throw new IllegalArgumentException("unknown company");
         }
+        return add(cid, 1);
+    }
+
+    /** 검증이 끝난 회사에 점수를 더한다. 3D 공격은 {@code AttackAggregator}가 모아서 이걸로 한 번에 넣는다. */
+    public long add(long companyId, long amount) {
         String day = today();
         Long total = redis.execute(rageHitScript,
                 List.of(pendingKey(day), rankKey(day), totalKey(day)),
-                String.valueOf(cid), String.valueOf(DAY_KEY_TTL_SECONDS));
+                String.valueOf(companyId), String.valueOf(DAY_KEY_TTL_SECONDS), String.valueOf(amount));
         return total == null ? 0 : total;
     }
 
@@ -55,6 +63,22 @@ public class RageService {
                 })
                 .toList();
         return new RankingResponse(total == null ? 0 : Long.parseLong(total), entries);
+    }
+
+    /** 오늘 점수. 3D 마당의 샌드백 숫자에 쓴다. 점수가 없는 회사는 0. */
+    public Map<Long, Long> todayScores(Collection<Long> companyIds) {
+        if (companyIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> ids = List.copyOf(companyIds);
+        List<Double> scores = redis.opsForZSet().score(rankKey(today()),
+                ids.stream().map(String::valueOf).toArray(Object[]::new));
+        Map<Long, Long> result = new HashMap<>();
+        for (int i = 0; i < ids.size(); i++) {
+            Double score = scores == null ? null : scores.get(i);
+            result.put(ids.get(i), score == null ? 0L : score.longValue());
+        }
+        return result;
     }
 
     static String today() {

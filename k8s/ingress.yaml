@@ -1,6 +1,6 @@
 # Traefik :80은 k3s-master의 Tailscale Funnel로 인터넷에 공개된다.
 #   https://k3s-master.taildcdcee.ts.net/bunpuri/api/... → (prefix 제거) → bunpuri:8080/api/...
-# /bunpuri/api만 연다: /actuator(지표·헬스)는 외부에 노출하지 않고 tailnet NodePort로만 본다.
+# /bunpuri/api와 /bunpuri/ws만 연다: /actuator(지표·헬스)는 외부에 노출하지 않고 tailnet NodePort로만 본다.
 # 쓰기 요청은 앱의 RateLimitInterceptor가 제한한다.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -23,6 +23,14 @@ spec:
     - http:
         paths:
           - path: /bunpuri/api
+            pathType: Prefix
+            backend:
+              service:
+                name: bunpuri
+                port:
+                  name: http
+          # 3D 마당 WebSocket (wss://.../bunpuri/ws/arena). Traefik은 Upgrade를 그대로 넘긴다.
+          - path: /bunpuri/ws
             pathType: Prefix
             backend:
               service:

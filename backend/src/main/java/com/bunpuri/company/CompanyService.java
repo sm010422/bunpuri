@@ -23,6 +23,11 @@ public class CompanyService {
                 .toList();
     }
 
+    /** 아직 아무도 안 때린 날 3D 마당을 비워 두지 않으려고 쓰는 기본 샌드백 목록. */
+    public List<Long> firstIds(int size) {
+        return companyDirectory.namesById().keySet().stream().sorted().limit(size).toList();
+    }
+
     public boolean exists(long companyId) {
         return companyDirectory.namesById().containsKey(companyId);
     }
