@@ -8,6 +8,7 @@ resources:
   - postgres.yaml
   - redis.yaml
   - app.yaml
+  - ingress.yaml
 # Not listed on purpose: the Secret bunpuri-db is created with kubectl (never committed):
 #   kubectl create secret generic bunpuri-db -n bunpuri --from-literal=POSTGRES_PASSWORD=...
 

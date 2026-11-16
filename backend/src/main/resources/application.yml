@@ -29,6 +29,8 @@ spring:
       enabled: ${VIRTUAL_THREADS:false}
 
 server:
+  # Traefik이 붙여 주는 X-Forwarded-For로 실제 클라이언트 IP를 얻는다 (요청 제한 키).
+  forward-headers-strategy: native
   tomcat:
     threads:
       max: 200
@@ -54,3 +56,8 @@ bunpuri:
     mode: ${COMFORT_MODE:async}
     timeout-ms: 2000
     stub-latency-ms: 800
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+  cors:
+    # 쉼표로 여러 개. 운영은 k8s/app.yaml에서 Vercel 주소를 넣는다.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}

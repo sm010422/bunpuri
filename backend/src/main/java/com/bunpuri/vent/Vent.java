@@ -24,7 +24,8 @@ public class Vent {
 
     private boolean hidden;
 
-    @Column(insertable = false, updatable = false)
+    // DB 기본값에만 맡기면 저장 직후 응답에서 null이 나와서, 애플리케이션에서 채운다.
+    @Column(updatable = false)
     private OffsetDateTime createdAt;
 
     protected Vent() {
@@ -33,6 +34,7 @@ public class Vent {
     public Vent(Long companyId, String content) {
         this.companyId = companyId;
         this.content = content;
+        this.createdAt = OffsetDateTime.now();
     }
 
     public void comfortWith(String comfort) {

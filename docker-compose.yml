@@ -20,7 +20,7 @@ services:
 
   app:
     profiles: [app]
-    build: .
+    build: ./backend
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/bunpuri
       REDIS_HOST: redis

@@ -2,8 +2,15 @@
 build/
 .idea/
 *.iml
+.classpath
+.project
+.settings/
+bin/
 .env
 k6/results/
+node_modules/
+dist/
+.vercel/
 
 # 작업 문서는 로컬에만 둔다
 docs/
